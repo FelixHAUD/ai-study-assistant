@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
 
+import { FileUploader } from "@aws-amplify/ui-react-storage";
+
 const client = generateClient<Schema>();
 
 function App() {
@@ -25,6 +27,18 @@ function App() {
 
   return (
     <main>
+      <FileUploader
+        acceptedFileTypes={[
+          "application/pdf",
+          "text/plain",
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/epub+zip",
+        ]}
+        path="notes/"
+        maxFileCount={1}
+        isResumable
+      />
       <h1>My todos</h1>
       <button onClick={createTodo}>+ new</button>
       <ul>
