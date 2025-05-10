@@ -1,0 +1,108 @@
+.audio-recorder {
+  width: 700px;
+  max-width: 90vw;
+  min-width: 400px;
+  margin: 0 auto;
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.audio-recorder-title {
+  text-align: center;
+}
+
+.audio-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recording-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.recording-animation {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.recording-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e53935;
+  box-shadow: 0 0 0 0 rgba(229,57,53, 0.7);
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(229,57,53, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(229,57,53, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(229,57,53, 0);
+  }
+}
+
+.recording-text {
+  font-weight: bold;
+  color: #e53935;
+  font-size: 1.1rem;
+}
+
+.transcription-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+  text-align: left;
+}
+
+.transcription-textarea {
+  width: 100%;
+  min-height: 300px !important;
+  font-size: 16px;
+  line-height: 1.5;
+  padding: 1rem;
+  border: 1.5px solid #bdbdbd;
+  border-radius: 8px;
+  background: #f8f9fa;
+  resize: vertical;
+  margin-bottom: 0.5rem;
+}
+
+.edit-transcription-btn {
+  align-self: flex-end;
+  margin-bottom: 0.5rem;
+  color: #1976d2;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.receive-feedback-btn {
+  width: 100%;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background: linear-gradient(90deg, #7b2ff2 0%, #f357a8 100%);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(123,47,242,0.08);
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+
+.receive-feedback-btn:hover {
+  background: linear-gradient(90deg, #f357a8 0%, #7b2ff2 100%);
+}

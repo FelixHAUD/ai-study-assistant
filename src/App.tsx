@@ -8,7 +8,12 @@ import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
 type State = "recording" | "rating";
 
 function App() {
-  const [state, setState] = useState<State>("rating");
+  const [state, setState] = useState<State>("recording");
+  const [transcription, setTranscription] = useState("");
+
+  const handleTranscriptionComplete = (text: string) => {
+    setTranscription(text);
+  };
 
   return (
     <main>
@@ -25,9 +30,10 @@ function App() {
           isResumable
         />
       </div>
+      <div style={{ height: '2rem' }} />
       <div>
-        {state === "rating" && <Analysis text="hello" />}
-        {state === "recording" && <AudioRecorder />}
+        {state === "rating" && <Analysis text={transcription} />}
+        {state === "recording" && <AudioRecorder onTranscriptionComplete={handleTranscriptionComplete} />}
       </div>
     </main>
   );
