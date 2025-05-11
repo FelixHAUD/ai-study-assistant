@@ -10,7 +10,6 @@ import {
 //   StartStreamTranscriptionCommand,
 // } from "@aws-sdk/client-transcribe-streaming";
 import "./AudioRecorder.css";
-import Storage from "aws-amplify/storage";
 
 type RecordingState =
   | "idle"
