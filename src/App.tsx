@@ -5,6 +5,11 @@ import { FileUploader } from "@aws-amplify/ui-react-storage";
 import Analysis from "./components/Analysis/Analysis";
 import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
 
+import type { Schema } from "../amplify/data/resource";
+import { generateClient } from "aws-amplify/data";
+
+const client = generateClient<Schema>();
+
 // Steps in the flow
 // 1. upload, 2. question, 3. record, 4. feedback, 5. done
 
@@ -32,11 +37,6 @@ function App() {
     const questions = await generateQuestions();
     setQuestions(questions);
     setStep("question");
-  };
-
-  const checkHasAnyFile = async () => {
-    // checks if ther are any files in the S3 bucket
-    setHasAnyFiles(true);
   };
 
   // When user clicks "Record Answer"
@@ -83,7 +83,8 @@ function App() {
 
   useEffect(() => {
     async function startUp() {
-      checkHasAnyFile();
+      const response = await client.queries.anyFiles();
+      setHasAnyFiles(response.data ? response.data : false);
     }
 
     startUp();

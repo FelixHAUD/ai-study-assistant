@@ -2,28 +2,25 @@ import { Button, Message, Placeholder, Rating } from "@aws-amplify/ui-react";
 import "./Analysis.css";
 import { useEffect, useState } from "react";
 
+import type { Schema } from "../../../amplify/data/resource";
+import { generateClient } from "aws-amplify/data";
+
+const client = generateClient<Schema>();
+
 type Rating = {
   score: number;
   message: string; // What you did well
   improvements: string[]; // 3 Improvements
 };
 
-async function rateText(text: string): Promise<Rating> {
+async function rateText(text: string): Promise<Rating | null> {
   // using await AI returns a plain text with delimiters
 
-  console.log("AI rates text and returns a JSON");
-
-  const response = JSON.stringify({
-    score: 10,
-    message:
-      "Your explanation was clear and well-structured. You demonstrated good understanding of the material and articulated key points effectively.",
-    improvements: [
-      "Consider adding more depth to your explanation of the theoretical framework",
-      "Try to use more domain-specific terminology where appropriate",
-      "Your explanation could benefit from a stronger conclusion that ties concepts together",
-    ],
+  const response = await client.queries.rateResponse({
+    text: text,
   });
-  return JSON.parse(response);
+
+  return response.data ? response.data : null;
 }
 
 type AnalysisProps = {
