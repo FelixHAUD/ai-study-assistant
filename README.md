@@ -115,7 +115,7 @@ An intelligent study assistant that helps users learn through interactive Q&A an
 - **Role**: AI Integration & Testing
 - **Contributions**:
   - Implemented AI question generation logic
-  - Developed feedback system using Claude AI
+  - Developed feedback system using Claude AI (Claude 3.7 Sonnet)
   - Created API Gateway endpoints
   - Optimized AI response handling
 
