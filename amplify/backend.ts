@@ -5,6 +5,7 @@ import { storage } from "./storage/resource";
 import { rateResponse } from "./functions/rate-response/resource";
 import { anyFiles } from "./functions/any-files/resource";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { defineFunction } from "@aws-amplify/backend";
 
 const backend = defineBackend({
   auth,
@@ -12,6 +13,13 @@ const backend = defineBackend({
   storage,
   rateResponse,
   anyFiles,
+});
+
+// Create a custom resource group for S3 permissions
+const s3Permissions = defineFunction({
+  name: "s3-permissions",
+  entry: "./s3-permissions.ts",
+  resourceGroupName: "storage"
 });
 
 // Configure policy for S3 access
@@ -37,16 +45,9 @@ backend.auth.resources.unauthenticatedUserIamRole.addToPrincipalPolicy(
       "textract:DetectDocumentText",
       "textract:GetDocumentAnalysis",
       "textract:StartDocumentAnalysis",
-      "textract:StartDocumentTextDetection",
-      "s3:PutObject",
-      "s3:GetObject",
-      "s3:DeleteObject",
-      "s3:ListBucket"
+      "textract:StartDocumentTextDetection"
     ],
-    resources: [
-      `arn:aws:s3:::${backend.storage.resources.bucket.bucketName}/*`,
-      `arn:aws:s3:::${backend.storage.resources.bucket.bucketName}`
-    ],
+    resources: ["*"]
   })
 );
 

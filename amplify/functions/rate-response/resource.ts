@@ -5,4 +5,5 @@ export const rateResponse = defineFunction({
   name: "rate-response",
   // optionally specify a path to your handler (defaults to "./handler.ts")
   entry: "./handler.ts",
+  resourceGroupName: "data"
 });
