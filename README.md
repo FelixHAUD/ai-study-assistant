@@ -1,5 +1,5 @@
 # AI Study Assistant
-# By Felix Hallmann, Johnny Wu, Badrish Ananth
+# By Felix Hallmann, Johnny Wu, Badrish Ananth - AWS CLOUDHACKS + AI@UCI
 
 An intelligent study assistant that helps users learn through interactive Q&A and speech-based feedback. The application uses AWS Bedrock's Claude AI to analyze study materials and provide personalized feedback.
 
@@ -19,12 +19,14 @@ An intelligent study assistant that helps users learn through interactive Q&A an
   - TypeScript
   - AWS Amplify UI Components
   - AWS Amplify Storage
+  - WebSpeechAPI
 
 - **Backend**:
   - AWS Amplify
   - AWS Bedrock (Supposed to be Claude, may be AWS Kendra)
   - Amazon S3 (File Storage)
   - AWS Lambda (Serverless Functions)
+  - API Gateway
 
 ## Setup Instructions
 
@@ -81,7 +83,7 @@ An intelligent study assistant that helps users learn through interactive Q&A an
 
 3. **Speech Interaction**:
    - User speaks their answers
-   - Speech is converted to text using AWS Transcribe
+   - Speech is converted to text using Web Speech API
    - Text is processed for analysis
 
 4. **Feedback System**:
@@ -98,11 +100,13 @@ An intelligent study assistant that helps users learn through interactive Q&A an
   - Integrated AWS Amplify UI components
   - Created speech-to-text interface
   - Set up IAM roles and policies for access control
+  - Developed question generator logic
 
 ### Johnny Wu
-- **Role**: FUllstack
+- **Role**: Fullstack MVP 10x Engineer
 - **Contributions**:
   - Set up AWS Amplify backend infrastructure
+  - Developed question generator logic 
   - Implemented AWS Bedrock integration
   - Developed file upload functionality
   - Developed Lambda functions for AI processing
@@ -112,7 +116,7 @@ An intelligent study assistant that helps users learn through interactive Q&A an
 - **Contributions**:
   - Implemented AI question generation logic
   - Developed feedback system using Claude AI
-  - Created test cases and documentation
+  - Created API Gateway endpoints
   - Optimized AI response handling
 
 ## Security
