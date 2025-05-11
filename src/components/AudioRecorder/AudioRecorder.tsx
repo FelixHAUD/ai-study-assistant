@@ -3,14 +3,14 @@ import {
   Button,
   Flex,
   Text,
-  TextAreaField,
   Loader,
 } from "@aws-amplify/ui-react";
-import {
-  TranscribeStreamingClient,
-  StartStreamTranscriptionCommand,
-} from "@aws-sdk/client-transcribe-streaming";
+// import {
+//   TranscribeStreamingClient,
+//   StartStreamTranscriptionCommand,
+// } from "@aws-sdk/client-transcribe-streaming";
 import "./AudioRecorder.css";
+import Storage from "aws-amplify/storage";
 
 type RecordingState =
   | "idle"
@@ -32,7 +32,6 @@ function AudioRecorder({
   const [transcription, setTranscription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -165,15 +164,11 @@ function AudioRecorder({
 
   const processAudio = async (audioBlob: Blob) => {
     setRecordingState("transcribing");
-    // TODO: Implement AWS Transcribe streaming
-    // This is where we'll integrate with AWS Transcribe
-    // For now, we'll simulate transcription
     setTimeout(() => {
       const simulatedTranscription =
         "This is a simulated transcription. AWS Transcribe integration will be implemented here.";
       setTranscription(simulatedTranscription);
       setRecordingState("completed");
-      // Call the callback with the transcription
       onTranscriptionComplete?.(simulatedTranscription);
     }, 2000);
   };
