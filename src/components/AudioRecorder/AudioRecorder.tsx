@@ -6,11 +6,61 @@ import {
   Loader,
 } from "@aws-amplify/ui-react";
 import { uploadData } from "@aws-amplify/storage";
-// import {
-//   TranscribeStreamingClient,
-//   StartStreamTranscriptionCommand,
-// } from "@aws-sdk/client-transcribe-streaming";
 import "./AudioRecorder.css";
+
+// Add Web Speech API type definitions
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+  interpretation: any;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionError extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (event: SpeechRecognitionEvent) => void;
+  onerror: (event: SpeechRecognitionError) => void;
+  onend: () => void;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+  prototype: SpeechRecognition;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
+  }
+}
 
 type RecordingState =
   | "idle"
@@ -40,6 +90,8 @@ function AudioRecorder({
   const streamRef = useRef<MediaStream | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const finalTranscriptRef = useRef<string>("");
 
   useEffect(() => {
     if (recordingState === "recording") {
@@ -136,6 +188,51 @@ function AudioRecorder({
         await processAudio(audioBlob);
       };
 
+      // Initialize speech recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+          let interimTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscriptRef.current += transcript + ' ';
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+
+          const fullTranscript = finalTranscriptRef.current + interimTranscript;
+          setTranscription(fullTranscript);
+          onTranscriptionComplete?.(fullTranscript);
+        };
+
+        recognition.onerror = (event: SpeechRecognitionError) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'no-speech') {
+            // Restart recognition if no speech is detected
+            recognition.stop();
+            recognition.start();
+          }
+        };
+
+        recognition.onend = () => {
+          // Restart recognition if it ends unexpectedly
+          if (recordingState === 'recording') {
+            recognition.start();
+          }
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+      }
+
       mediaRecorder.start();
       setRecordingState("recording");
     } catch (error) {
@@ -152,6 +249,10 @@ function AudioRecorder({
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+      // Stop speech recognition
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       // Clean up audio context
       analyserRef.current?.disconnect();
       audioContextRef.current?.close();
@@ -161,6 +262,7 @@ function AudioRecorder({
   const restartRecording = () => {
     setRecordingState("idle");
     setTranscription("");
+    finalTranscriptRef.current = "";
     audioChunksRef.current = [];
   };
 
@@ -180,15 +282,7 @@ function AudioRecorder({
         }
       });
       console.log('Audio uploaded successfully to S3');
-
-      // Simulate transcription for now
-      setTimeout(() => {
-        const simulatedTranscription =
-          "This is a simulated transcription. AWS Transcribe integration will be implemented here.";
-        setTranscription(simulatedTranscription);
-        setRecordingState("completed");
-        onTranscriptionComplete?.(simulatedTranscription);
-      }, 2000);
+      setRecordingState("completed");
     } catch (error) {
       console.error('Failed to upload audio to S3:', error);
       throw error;
@@ -258,7 +352,7 @@ function AudioRecorder({
           </div>
         )}
 
-        {recordingState === "completed" && (
+        {(recordingState === "recording" || recordingState === "completed") && (
           <div className="transcription-container">
             <Flex direction="column" gap="1rem">
               <Text className="transcription-label">Transcription</Text>
