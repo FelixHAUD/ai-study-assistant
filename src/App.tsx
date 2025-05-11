@@ -22,7 +22,9 @@ function App() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [transcription, setTranscription] = useState("");
-  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; key: string }[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    { name: string; key: string }[]
+  >([]);
   const [showFilePicker, setShowFilePicker] = useState(false);
 
   // Load uploaded files from localStorage on mount
@@ -87,21 +89,6 @@ function App() {
     setTranscription("");
   };
 
-  // When user clicks 'Use Past Uploaded Notes'
-  const handleUsePastNotes = () => {
-    setShowFilePicker(true);
-  };
-
-  // When user selects a file from the picker
-  const handleSelectPastFile = (file: { name: string; key: string }) => {
-    setShowFilePicker(false);
-    // Simulate question generation for the selected file
-    setTimeout(() => {
-      setQuestions(SIMULATED_QUESTIONS.map(q => `${q} (from ${file.name})`));
-      setStep("question");
-    }, 500);
-  };
-
   return (
     <main>
       {step === "upload" && (
@@ -118,34 +105,39 @@ function App() {
             isResumable
             onUploadSuccess={handleFileUpload}
           />
-          {uploadedFiles.length > 0 && !showFilePicker && (
-            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-              <button onClick={handleUsePastNotes}>
-                Use Past Uploaded Notes
-              </button>
-            </div>
-          )}
+          <div style={{ marginTop: "2rem", textAlign: "center" }}>
+            <button onClick={han}>Use Past Uploaded Notes</button>
+          </div>
           {showFilePicker && (
-            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+            <div style={{ marginTop: "2rem", textAlign: "center" }}>
               <h3>Select a file to use as notes:</h3>
-              <ul style={{ listStyle: 'none', padding: 0 }}>
+              <ul style={{ listStyle: "none", padding: 0 }}>
                 {uploadedFiles.map((file, idx) => (
-                  <li key={file.key} style={{ margin: '8px 0' }}>
+                  <li key={file.key} style={{ margin: "8px 0" }}>
                     <button onClick={() => handleSelectPastFile(file)}>
                       {file.name}
                     </button>
                   </li>
                 ))}
               </ul>
-              <button onClick={() => setShowFilePicker(false)} style={{ marginTop: 12 }}>Cancel</button>
+              <button
+                onClick={() => setShowFilePicker(false)}
+                style={{ marginTop: 12 }}
+              >
+                Cancel
+              </button>
             </div>
           )}
         </div>
       )}
       {step === "question" && questions.length > 0 && (
         <div style={{ marginTop: "2rem" }}>
-          <h2>Question {currentIdx + 1} of {questions.length}</h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>{questions[currentIdx]}</p>
+          <h2>
+            Question {currentIdx + 1} of {questions.length}
+          </h2>
+          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+            {questions[currentIdx]}
+          </p>
           <button style={{ marginTop: 24 }} onClick={handleStartRecording}>
             Record Answer
           </button>
@@ -153,8 +145,12 @@ function App() {
       )}
       {step === "record" && (
         <div style={{ marginTop: "2rem" }}>
-          <h2>Question {currentIdx + 1} of {questions.length}</h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>{questions[currentIdx]}</p>
+          <h2>
+            Question {currentIdx + 1} of {questions.length}
+          </h2>
+          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+            {questions[currentIdx]}
+          </p>
           <AudioRecorder
             onTranscriptionComplete={handleTranscriptionComplete}
             onGetRating={handleGetFeedback}
@@ -163,8 +159,12 @@ function App() {
       )}
       {step === "feedback" && (
         <div style={{ marginTop: "2rem" }}>
-          <h2>Question {currentIdx + 1} of {questions.length}</h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>{questions[currentIdx]}</p>
+          <h2>
+            Question {currentIdx + 1} of {questions.length}
+          </h2>
+          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+            {questions[currentIdx]}
+          </p>
           <Analysis text={transcription} onContinue={handleNextQuestion} />
         </div>
       )}
