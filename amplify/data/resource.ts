@@ -1,5 +1,6 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
 import { rateResponse } from "../functions/rate-response/resource";
+import { getQuestions } from "../functions/get-questions/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -27,6 +28,14 @@ const schema = a.schema({
     )
     .authorization((allow) => [allow.publicApiKey()])
     .handler(a.handler.function(rateResponse)),
+  getQuestions: a
+    .query()
+    .arguments({
+      localPath: a.string().required().array().required(),
+    })
+    .returns(a.string().required().array().required())
+    .authorization((allow) => [allow.publicApiKey()])
+    .handler(a.handler.function(getQuestions)),
 });
 
 export type Schema = ClientSchema<typeof schema>;

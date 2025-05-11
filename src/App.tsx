@@ -9,6 +9,11 @@ import { Button, Flex, Text } from "@aws-amplify/ui-react";
 // Steps in the flow
 // 1. upload, 2. question, 3. record, 4. feedback, 5. done
 
+import type { Schema } from "../amplify/data/resource";
+import { generateClient } from "aws-amplify/data";
+
+const client = generateClient<Schema>();
+
 type Step = "upload" | "question" | "record" | "feedback" | "done";
 
 interface UploadedFile {
@@ -16,16 +21,6 @@ interface UploadedFile {
   name: string;
   size: number;
   lastModified: Date;
-  objURL: string;
-}
-
-function buildS3URL(path: string) {
-  const bucketUrl =
-    "https://amplify-amplifyvitereactt-amplifyteamdrivebucket28-2j1zgywqwfjv.s3.us-west-2.amazonaws.com";
-  const encodedPath = encodeURIComponent(path)
-    .replace(/%20/g, "+") // space → +
-    .replace(/%2F/g, "/"); // %2F → /
-  return `${bucketUrl}/${encodedPath}`;
 }
 
 function App() {
@@ -45,40 +40,17 @@ function App() {
         throw new Error("No files uploaded");
       }
 
-      // Convert file content to base64
-      const objURL = buildS3URL(file.key);
-      console.log(objURL);
-      const fileContent = await fetch(objURL).then((res) => res.text());
-      const base64Content = btoa(fileContent);
+      const questions = await client.queries.getQuestions({
+        localPath: uploadedFiles.map((file) => file.key),
+      });
 
-      // Get filename from the key
-      const filename = file.key.split("/").pop() || "Unknown file";
-
-      // Call the file query endpoint
-      const response = await fetch(
-        "https://qkhr2j5d52.execute-api.us-west-2.amazonaws.com/filequery",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            prompt:
-              "Generate 3 study questions based on this content. Make them thought-provoking and focused on understanding key concepts.",
-            filename: filename,
-            file_content_base64: base64Content,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to generate questions");
+      if (!questions.data) {
+        throw questions.errors;
       }
 
-      const data = await response.json();
       // Assuming the response contains an array of questions
       setQuestions(
-        data.questions || [
+        questions.data || [
           "What is the main idea of the uploaded document?",
           "Summarize the key findings in your own words.",
           "How could you apply this information in a real-world scenario?",
@@ -108,7 +80,6 @@ function App() {
         name: file.key.split("/").pop() || "Unknown file",
         size: 0, // We don't have access to the actual file size
         lastModified: new Date(),
-        objURL: buildS3URL(file.key),
       },
     ]);
     setIsUploadComplete(true);

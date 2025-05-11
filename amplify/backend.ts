@@ -5,12 +5,14 @@ import { storage } from "./storage/resource";
 import { rateResponse } from "./functions/rate-response/resource";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { defineFunction } from "@aws-amplify/backend";
+import { getQuestions } from "./functions/get-questions/resource";
 
 const backend = defineBackend({
   auth,
   data,
   storage,
   rateResponse,
+  getQuestions,
 });
 
 // Create a custom resource group for S3 permissions
