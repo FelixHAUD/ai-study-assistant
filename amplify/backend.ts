@@ -4,11 +4,113 @@ import { data } from "./data/resource";
 import { storage } from "./storage/resource";
 import { rateResponse } from "./functions/rate-response/resource";
 import { anyFiles } from "./functions/any-files/resource";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 
-defineBackend({
+const backend = defineBackend({
   auth,
   data,
   storage,
   rateResponse,
   anyFiles,
+});
+
+// Configure policy for S3 access
+backend.auth.resources.unauthenticatedUserIamRole.addToPrincipalPolicy(
+  new PolicyStatement({
+    actions: [
+      "translate:TranslateText",
+      "polly:SynthesizeSpeech",
+      "transcribe:StartStreamTranscriptionWebSocket",
+      "comprehend:DetectSentiment",
+      "comprehend:DetectEntities",
+      "comprehend:DetectDominantLanguage",
+      "comprehend:DetectSyntax",
+      "comprehend:DetectKeyPhrases",
+      "rekognition:DetectFaces",
+      "rekognition:RecognizeCelebrities",
+      "rekognition:DetectLabels",
+      "rekognition:DetectModerationLabels",
+      "rekognition:DetectText",
+      "rekognition:DetectLabel",
+      "rekognition:SearchFacesByImage",      
+      "textract:AnalyzeDocument",
+      "textract:DetectDocumentText",
+      "textract:GetDocumentAnalysis",
+      "textract:StartDocumentAnalysis",
+      "textract:StartDocumentTextDetection",
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+      "s3:ListBucket"
+    ],
+    resources: [
+      `arn:aws:s3:::${backend.storage.resources.bucket.bucketName}/*`,
+      `arn:aws:s3:::${backend.storage.resources.bucket.bucketName}`
+    ],
+  })
+);
+
+backend.addOutput({
+  custom: {
+    Predictions: {
+      convert: {
+        translateText: {
+          defaults: {
+            sourceLanguage: "en",
+            targetLanguage: "es",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        speechGenerator: {
+          defaults: {
+            voiceId: "Ivy",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        transcription: {
+          defaults: {
+            language: "en-US",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+      },
+      identify: {
+        identifyEntities: {
+          defaults: {
+            collectionId: "default",
+            maxEntities: 10,
+          },
+          celebrityDetectionEnabled: true,
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        identifyLabels: {
+          defaults: {
+            type: "ALL",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+        identifyText: {
+          defaults: {
+            format: "ALL",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+      },
+      interpret: {
+        interpretText: {
+          defaults: {
+            type: "ALL",
+          },
+          proxy: false,
+          region: backend.auth.stack.region,
+        },
+      },
+    },
+  },
 });

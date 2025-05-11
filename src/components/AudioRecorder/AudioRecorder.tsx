@@ -5,6 +5,7 @@ import {
   Text,
   Loader,
 } from "@aws-amplify/ui-react";
+import { uploadData } from "@aws-amplify/storage";
 // import {
 //   TranscribeStreamingClient,
 //   StartStreamTranscriptionCommand,
@@ -95,7 +96,9 @@ function AudioRecorder({
       return () => {
         cancelAnimationFrame(animationId);
         analyserRef.current?.disconnect();
-        audioContextRef.current?.close();
+        if (audioContextRef.current?.state !== 'closed') {
+          audioContextRef.current?.close();
+        }
       };
     }
   }, [recordingState]);
@@ -163,13 +166,35 @@ function AudioRecorder({
 
   const processAudio = async (audioBlob: Blob) => {
     setRecordingState("transcribing");
-    setTimeout(() => {
-      const simulatedTranscription =
-        "This is a simulated transcription. AWS Transcribe integration will be implemented here.";
-      setTranscription(simulatedTranscription);
-      setRecordingState("completed");
-      onTranscriptionComplete?.(simulatedTranscription);
-    }, 2000);
+    const audioUrl = URL.createObjectURL(audioBlob);
+    
+    try {
+      // Upload to S3
+      const key = `audio-recordings/${Date.now()}.webm`;
+      console.log('Uploading audio to S3:', key);
+      await uploadData({
+        path: key,
+        data: audioBlob,
+        options: {
+          contentType: 'audio/webm'
+        }
+      });
+      console.log('Audio uploaded successfully to S3');
+
+      // Simulate transcription for now
+      setTimeout(() => {
+        const simulatedTranscription =
+          "This is a simulated transcription. AWS Transcribe integration will be implemented here.";
+        setTranscription(simulatedTranscription);
+        setRecordingState("completed");
+        onTranscriptionComplete?.(simulatedTranscription);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to upload audio to S3:', error);
+      throw error;
+    } finally {
+      URL.revokeObjectURL(audioUrl);
+    }
   };
 
   const handleTranscriptionEdit = (newText: string) => {

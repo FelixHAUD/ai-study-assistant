@@ -8,6 +8,9 @@ export const storage = defineStorage({
     ],
     "transcriptions/*": [
       allow.guest.to(["read", "write", "delete"]),
+    ],
+    "audio-recordings/*": [
+      allow.guest.to(["read", "write", "delete"])
     ]
   }),
   triggers: {
