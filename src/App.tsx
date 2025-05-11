@@ -5,12 +5,33 @@ import { FileUploader } from "@aws-amplify/ui-react-storage";
 import Analysis from "./components/Analysis/Analysis";
 import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
 import { Button, Flex, Text } from "@aws-amplify/ui-react";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Steps in the flow
 // 1. upload, 2. question, 3. record, 4. feedback, 5. done
 
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+
+function fileToBase64(file: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string") {
+        resolve(result.split(",")[1]); // Remove "data:application/pdf;base64," prefix
+      } else {
+        reject("Unexpected result type");
+      }
+    };
+
+    reader.onerror = reject;
+
+    reader.readAsDataURL(file); // Reads as base64
+  });
+}
 
 const client = generateClient<Schema>();
 
@@ -21,6 +42,69 @@ interface UploadedFile {
   name: string;
   size: number;
   lastModified: Date;
+}
+
+async function getQuestions(localPaths: string[]) {
+  const content: string[] = [];
+  const s3Client = new S3Client({
+    region: "us-west-2",
+    credentials: {
+      accessKeyId: "AKIA6ODU2DW6QT77OC4S",
+      secretAccessKey: "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",
+    },
+  });
+  for (const path of localPaths) {
+    try {
+      // Generate presigned URL
+      const command = new GetObjectCommand({
+        Bucket:
+          "amplify-amplifyvitereactt-amplifyteamdrivebucket28-2j1zgywqwfjv",
+        Key: path,
+      });
+
+      const presignedUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 3600, // URL expires in 1 hour
+      });
+
+      // Fetch file content using presigned URL
+      const fileContent = await fetch(presignedUrl).then((res) => res.blob());
+      const base64Content = await fileToBase64(fileContent);
+
+      content.push(base64Content);
+    } catch (error) {
+      console.error(`Error processing file ${path}:`, error);
+      throw new Error(`Failed to process file ${path}`);
+    }
+  }
+  try {
+    const response = await fetch(
+      "https://qkhr2j5d52.execute-api.us-west-2.amazonaws.com/filequery",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt:
+            "Generate study questions based on this content. Make them thought-provoking and focused on understanding key concepts.",
+          filename: "something.txt",
+          file_content_base64: content.join(),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to generate questions");
+    }
+
+    const data = await response.json();
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    throw error;
+  }
 }
 
 function App() {
@@ -40,17 +124,15 @@ function App() {
         throw new Error("No files uploaded");
       }
 
-      const questions = await client.queries.getQuestions({
-        localPath: uploadedFiles.map((file) => file.key),
-      });
+      const questions = await getQuestions(
+        uploadedFiles.map((file) => file.key)
+      );
 
-      if (!questions.data) {
-        throw questions.errors;
-      }
+      console.log(questions);
 
       // Assuming the response contains an array of questions
       setQuestions(
-        questions.data || [
+        questions || [
           "What is the main idea of the uploaded document?",
           "Summarize the key findings in your own words.",
           "How could you apply this information in a real-world scenario?",

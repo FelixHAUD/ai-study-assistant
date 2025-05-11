@@ -9,18 +9,25 @@ export const handler: Schema["getQuestions"]["functionHandler"] = async (
   const { localPath } = event.arguments;
 
   // Create S3 client with hardcoded region
-  const s3Client = new S3Client({ region: 'us-west-2' });
+  const s3Client = new S3Client({
+    region: "us-west-2",
+    credentials: {
+      accessKeyId: "AKIA6ODU2DW6QT77OC4S",
+      secretAccessKey: "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",
+    },
+  });
 
   for (const path of localPath) {
     try {
       // Generate presigned URL
       const command = new GetObjectCommand({
-        Bucket: process.env.STORAGE_BUCKET_NAME,
+        Bucket:
+          "amplify-amplifyvitereactt-amplifyteamdrivebucket28-2j1zgywqwfjv",
         Key: path,
       });
-      
-      const presignedUrl = await getSignedUrl(s3Client, command, { 
-        expiresIn: 3600 // URL expires in 1 hour
+
+      const presignedUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 3600, // URL expires in 1 hour
       });
 
       // Fetch file content using presigned URL
