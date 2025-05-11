@@ -162,7 +162,13 @@ function App() {
               path="notes/"
               maxFileCount={5}
               isResumable
-              onUploadSuccess={(file) => handleFileUpload(file)}
+              onUploadSuccess={(file) => {
+                if (file.key) {
+                  handleFileUpload(file as { key: string });
+                } else {
+                  console.error("File upload failed: No key provided");
+                }
+              }}
             />
 
             {uploadedFiles.length > 0 && (
