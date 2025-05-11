@@ -106,3 +106,44 @@
 .receive-feedback-btn:hover {
   background: linear-gradient(90deg, #f357a8 0%, #7b2ff2 100%);
 }
+
+.recorder-info-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.recorder-timer {
+  font-size: 1.1rem;
+  font-family: monospace;
+  font-weight: bold;
+  color: #333;
+  letter-spacing: 1px;
+}
+
+.volume-bar-container {
+  width: 120px;
+  height: 16px;
+  background: #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+}
+
+.volume-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #7b2ff2 0%, #f357a8 100%);
+  transition: width 0.1s linear;
+}
+
+.waveform-canvas {
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1.5px solid #bdbdbd;
+  margin-left: 0.5rem;
+  box-shadow: 0 1px 4px rgba(123,47,242,0.05);
+  display: block;
+}

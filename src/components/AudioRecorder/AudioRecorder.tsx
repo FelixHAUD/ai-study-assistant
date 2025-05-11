@@ -31,9 +31,86 @@ function AudioRecorder({
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [transcription, setTranscription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    if (recordingState === "recording") {
+      setDuration(0);
+      timerRef.current = setInterval(() => {
+        setDuration((d) => d + 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [recordingState]);
+
+  useEffect(() => {
+    if (recordingState === "recording" && streamRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const source = audioContextRef.current.createMediaStreamSource(streamRef.current);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 1024;
+      source.connect(analyserRef.current);
+      const dataArray = new Uint8Array(analyserRef.current.fftSize);
+      let animationId: number;
+      const drawWaveform = () => {
+        if (analyserRef.current && canvasRef.current) {
+          analyserRef.current.getByteTimeDomainData(dataArray);
+          const canvas = canvasRef.current;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            const sliceWidth = canvas.width / dataArray.length;
+            let x = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              const v = dataArray[i] / 128.0;
+              const y = (v * canvas.height) / 2;
+              if (i === 0) {
+                ctx.moveTo(x, y);
+              } else {
+                ctx.lineTo(x, y);
+              }
+              x += sliceWidth;
+            }
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.strokeStyle = "#7b2ff2";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          }
+        }
+        animationId = requestAnimationFrame(drawWaveform);
+      };
+      drawWaveform();
+      return () => {
+        cancelAnimationFrame(animationId);
+        analyserRef.current?.disconnect();
+        audioContextRef.current?.close();
+      };
+    }
+  }, [recordingState]);
+
+  useEffect(() => {
+    if (recordingState === "processing" && audioChunksRef.current.length > 0) {
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+      setAudioUrl(URL.createObjectURL(audioBlob));
+    }
+    if (recordingState === "idle" || recordingState === "recording") {
+      setAudioUrl(null);
+    }
+  }, [recordingState]);
 
   const startRecording = async () => {
     try {
@@ -74,6 +151,9 @@ function AudioRecorder({
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+      // Clean up audio context
+      analyserRef.current?.disconnect();
+      audioContextRef.current?.close();
     }
   };
 
@@ -126,6 +206,15 @@ function AudioRecorder({
             <div className="recording-animation">
               <span className="recording-dot" />
               <Text className="recording-text">Recording...</Text>
+            </div>
+            <div className="recorder-info-row">
+              <span className="recorder-timer">{String(Math.floor(duration / 60)).padStart(2, '0')}:{String(duration % 60).padStart(2, '0')}</span>
+              <canvas
+                ref={canvasRef}
+                width={240}
+                height={48}
+                className="waveform-canvas"
+              />
             </div>
             <Button onClick={stopRecording} variation="destructive">
               Stop Recording
@@ -187,6 +276,12 @@ function AudioRecorder({
                 Receive Feedback
               </Button>
             </Flex>
+          </div>
+        )}
+
+        {recordingState === "completed" && audioUrl && (
+          <div style={{ marginBottom: '1rem' }}>
+            <audio controls src={audioUrl} style={{ width: '100%' }} />
           </div>
         )}
       </Flex>
