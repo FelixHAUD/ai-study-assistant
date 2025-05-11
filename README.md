@@ -92,7 +92,29 @@ An intelligent study assistant that helps users learn through interactive Q&A an
 
 ## Team Members
 
-[Add team member names and their contributions here]
+### Felix Hallmann
+- **Role**: Fullstack
+- **Contributions**:
+  - Implemented React components and user interface
+  - Integrated AWS Amplify UI components
+  - Created speech-to-text interface
+  - Configured AWS Cognito authentication
+
+### Johnny Wu
+- **Role**: FUllstack
+- **Contributions**:
+  - Set up AWS Amplify backend infrastructure
+  - Implemented AWS Bedrock integration
+  - Developed file upload functionality
+  - Developed Lambda functions for AI processing
+
+### Badrish Ananth
+- **Role**: AI Integration & Testing
+- **Contributions**:
+  - Implemented AI question generation logic
+  - Developed feedback system using Claude AI
+  - Created test cases and documentation
+  - Optimized AI response handling
 
 ## Security
 
