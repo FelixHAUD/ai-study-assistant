@@ -1,15 +1,33 @@
 import { useState, useRef, useEffect } from "react";
-import { Button, Flex, Text, TextAreaField, Loader } from "@aws-amplify/ui-react";
-import { TranscribeStreamingClient, StartStreamTranscriptionCommand } from "@aws-sdk/client-transcribe-streaming";
+import {
+  Button,
+  Flex,
+  Text,
+  TextAreaField,
+  Loader,
+} from "@aws-amplify/ui-react";
+import {
+  TranscribeStreamingClient,
+  StartStreamTranscriptionCommand,
+} from "@aws-sdk/client-transcribe-streaming";
 import "./AudioRecorder.css";
 
-type RecordingState = "idle" | "recording" | "processing" | "transcribing" | "completed";
+type RecordingState =
+  | "idle"
+  | "recording"
+  | "processing"
+  | "transcribing"
+  | "completed";
 
 interface AudioRecorderProps {
   onTranscriptionComplete?: (text: string) => void;
+  onGetRating: () => void;
 }
 
-function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
+function AudioRecorder({
+  onTranscriptionComplete,
+  onGetRating,
+}: AudioRecorderProps) {
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [transcription, setTranscription] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -21,7 +39,7 @@ function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      
+
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -34,7 +52,9 @@ function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
 
       mediaRecorder.onstop = async () => {
         setRecordingState("processing");
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
         await processAudio(audioBlob);
       };
 
@@ -42,7 +62,9 @@ function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
       setRecordingState("recording");
     } catch (error) {
       console.error("Error accessing microphone:", error);
-      alert("Error accessing microphone. Please ensure you have granted permission.");
+      alert(
+        "Error accessing microphone. Please ensure you have granted permission."
+      );
     }
   };
 
@@ -50,7 +72,7 @@ function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
     if (mediaRecorderRef.current && recordingState === "recording") {
       mediaRecorderRef.current.stop();
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     }
   };
@@ -67,7 +89,8 @@ function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
     // This is where we'll integrate with AWS Transcribe
     // For now, we'll simulate transcription
     setTimeout(() => {
-      const simulatedTranscription = "This is a simulated transcription. AWS Transcribe integration will be implemented here.";
+      const simulatedTranscription =
+        "This is a simulated transcription. AWS Transcribe integration will be implemented here.";
       setTranscription(simulatedTranscription);
       setRecordingState("completed");
       // Call the callback with the transcription
@@ -84,8 +107,14 @@ function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
   return (
     <div className="audio-recorder">
       <Flex direction="column" gap="1rem" padding="1rem">
-        <Text fontSize="1.5rem" fontWeight="bold" className="audio-recorder-title">Audio Recorder</Text>
-        
+        <Text
+          fontSize="1.5rem"
+          fontWeight="bold"
+          className="audio-recorder-title"
+        >
+          Audio Recorder
+        </Text>
+
         {recordingState === "idle" && (
           <Button onClick={startRecording} variation="primary">
             Start Recording
@@ -133,16 +162,28 @@ function AudioRecorder({ onTranscriptionComplete }: AudioRecorderProps) {
                 readOnly={!isEditing}
               />
               {!isEditing && (
-                <Button className="edit-transcription-btn" variation="link" onClick={() => setIsEditing(true)}>
+                <Button
+                  className="edit-transcription-btn"
+                  variation="link"
+                  onClick={() => setIsEditing(true)}
+                >
                   Edit Transcription
                 </Button>
               )}
               {isEditing && (
-                <Button className="edit-transcription-btn" variation="link" onClick={() => setIsEditing(false)}>
+                <Button
+                  className="edit-transcription-btn"
+                  variation="link"
+                  onClick={() => setIsEditing(false)}
+                >
                   Done Editing
                 </Button>
               )}
-              <Button className="receive-feedback-btn" variation="primary" onClick={() => {}}>
+              <Button
+                className="receive-feedback-btn"
+                variation="primary"
+                onClick={onGetRating}
+              >
                 Receive Feedback
               </Button>
             </Flex>

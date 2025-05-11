@@ -15,6 +15,15 @@ function App() {
     setTranscription(text);
   };
 
+  function handleGetRating() {
+    setState("rating");
+  }
+
+  function handleContinue() {
+    setTranscription("");
+    setState("recording");
+  }
+
   return (
     <main>
       <div>
@@ -30,10 +39,17 @@ function App() {
           isResumable
         />
       </div>
-      <div style={{ height: '2rem' }} />
+      <div style={{ height: "2rem" }} />
       <div>
-        {state === "rating" && <Analysis text={transcription} />}
-        {state === "recording" && <AudioRecorder onTranscriptionComplete={handleTranscriptionComplete} />}
+        {state === "recording" && (
+          <AudioRecorder
+            onTranscriptionComplete={handleTranscriptionComplete}
+            onGetRating={handleGetRating}
+          />
+        )}
+        {state === "rating" && (
+          <Analysis text={transcription} onContinue={handleContinue} />
+        )}
       </div>
     </main>
   );
