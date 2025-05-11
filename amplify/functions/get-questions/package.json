@@ -1,0 +1,10 @@
+{
+  "name": "get-questions",
+  "version": "1.0.0",
+  "description": "Lambda function to generate questions from uploaded files",
+  "main": "handler.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0"
+  }
+} 
