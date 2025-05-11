@@ -10,27 +10,27 @@ import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
 
 type Step = "upload" | "question" | "record" | "feedback" | "done";
 
-const SIMULATED_QUESTIONS = [
-  "What is the main idea of the uploaded document?",
-  "Summarize the key findings in your own words.",
-  "How could you apply this information in a real-world scenario?",
-];
+async function generateQuestions() {
+  return [
+    "What is the main idea of the uploaded document?",
+    "Summarize the key findings in your own words.",
+    "How could you apply this information in a real-world scenario?",
+  ];
+}
 
 function App() {
   const [step, setStep] = useState<Step>("upload");
   const [questions, setQuestions] = useState<string[]>([]);
-  const [currentIdx, setCurrentIdx] = useState(0);
+  const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [answers, setAnswers] = useState<string[]>([]);
-  const [transcription, setTranscription] = useState("");
-  const [fileUploaded, setFileUploaded] = useState(false);
+  const [transcription, setTranscription] = useState<string>("");
+  const [fileUploaded, setFileUploaded] = useState<boolean>(false);
 
-  // Simulate question generation after file upload
-  const handleFileUpload = () => {
-    setFileUploaded(true);
-    setTimeout(() => {
-      setQuestions(SIMULATED_QUESTIONS);
-      setStep("question");
-    }, 1000);
+  // Generate and update question state.
+  const handleGenerateQuestions = async () => {
+    const questions = await generateQuestions();
+    setQuestions(questions);
+    setStep("question");
   };
 
   // When user clicks "Record Answer"
@@ -56,6 +56,7 @@ function App() {
   // When user clicks "Next Question"
   const handleNextQuestion = () => {
     if (currentIdx < questions.length - 1) {
+      // There are still questions to be asked
       setCurrentIdx(currentIdx + 1);
       setTranscription(answers[currentIdx + 1] || "");
       setStep("question");
@@ -71,7 +72,7 @@ function App() {
     setCurrentIdx(0);
     setAnswers([]);
     setTranscription("");
-    setFileUploaded(false);
+    // setFileUploaded(false);
   };
 
   return (
@@ -88,13 +89,10 @@ function App() {
             path="notes/"
             maxFileCount={1}
             isResumable
-            onUploadSuccess={handleFileUpload}
+            onUploadSuccess={handleGenerateQuestions}
           />
-          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-            <button onClick={() => {
-              setQuestions(SIMULATED_QUESTIONS);
-              setStep("question");
-            }}>
+          <div style={{ marginTop: "2rem", textAlign: "center" }}>
+            <button onClick={handleGenerateQuestions}>
               Use Past Uploaded Notes
             </button>
           </div>
@@ -102,8 +100,12 @@ function App() {
       )}
       {step === "question" && questions.length > 0 && (
         <div style={{ marginTop: "2rem" }}>
-          <h2>Question {currentIdx + 1} of {questions.length}</h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>{questions[currentIdx]}</p>
+          <h2>
+            Question {currentIdx + 1} of {questions.length}
+          </h2>
+          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+            {questions[currentIdx]}
+          </p>
           <button style={{ marginTop: 24 }} onClick={handleStartRecording}>
             Record Answer
           </button>
@@ -111,8 +113,12 @@ function App() {
       )}
       {step === "record" && (
         <div style={{ marginTop: "2rem" }}>
-          <h2>Question {currentIdx + 1} of {questions.length}</h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>{questions[currentIdx]}</p>
+          <h2>
+            Question {currentIdx + 1} of {questions.length}
+          </h2>
+          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+            {questions[currentIdx]}
+          </p>
           <AudioRecorder
             onTranscriptionComplete={handleTranscriptionComplete}
             onGetRating={handleGetFeedback}
@@ -121,8 +127,12 @@ function App() {
       )}
       {step === "feedback" && (
         <div style={{ marginTop: "2rem" }}>
-          <h2>Question {currentIdx + 1} of {questions.length}</h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>{questions[currentIdx]}</p>
+          <h2>
+            Question {currentIdx + 1} of {questions.length}
+          </h2>
+          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
+            {questions[currentIdx]}
+          </p>
           <Analysis text={transcription} onContinue={handleNextQuestion} />
         </div>
       )}
