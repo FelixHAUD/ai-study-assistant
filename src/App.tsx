@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FileUploader } from "@aws-amplify/ui-react-storage";
 import Analysis from "./components/Analysis/Analysis";
 import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
+import { Button, Flex, Text } from "@aws-amplify/ui-react";
 
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
@@ -30,10 +31,27 @@ function App() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [transcription, setTranscription] = useState<string>("");
   const [hasAnyFiles, setHasAnyFiles] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Check for existing files on component mount
+  useEffect(() => {
+    async function checkForFiles() {
+      try {
+        const response = await client.queries.anyFiles();
+        setHasAnyFiles(response.data ?? false);
+      } catch (error) {
+        console.error("Error checking for files:", error);
+        setHasAnyFiles(false);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    checkForFiles();
+  }, []);
 
   // Simulate question generation after file upload
   const handleGenerateQuestions = async () => {
-    // setFileUploaded(true);
     const questions = await generateQuestions();
     setQuestions(questions);
     setStep("question");
@@ -78,22 +96,26 @@ function App() {
     setCurrentIdx(0);
     setAnswers([]);
     setTranscription("");
-    // setFileUploaded(false);
   };
 
-  useEffect(() => {
-    async function startUp() {
-      const response = await client.queries.anyFiles();
-      setHasAnyFiles(response.data ? response.data : false);
-    }
-
-    startUp();
-  }, []);
+  if (isLoading) {
+    return (
+      <Flex justifyContent="center" alignItems="center" height="100vh">
+        <Text>Loading...</Text>
+      </Flex>
+    );
+  }
 
   return (
     <main>
       {step === "upload" && (
-        <div>
+        <Flex direction="column" gap="2rem" padding="2rem">
+          <Text fontSize="2rem" fontWeight="bold">
+            Welcome to ConceptBridge, your AI-powered study assistant
+          </Text>
+          <Text fontSize="1.2rem">
+            Upload your notes and let ConceptBridge help you understand them.
+          </Text>
           <FileUploader
             acceptedFileTypes={[
               "application/pdf",
@@ -106,59 +128,62 @@ function App() {
             isResumable
             onUploadSuccess={handleGenerateQuestions}
           />
-          <div style={{ marginTop: "2rem", textAlign: "center" }}>
-            {hasAnyFiles && (
-              <button onClick={handleGenerateQuestions}>
+          {hasAnyFiles && (
+            <Flex direction="column" gap="1rem" alignItems="center">
+              <Text>Or use a previously uploaded file:</Text>
+              <Button onClick={handleGenerateQuestions}>
                 Use Past Uploaded Notes
-              </button>
-            )}
-          </div>
-        </div>
+              </Button>
+            </Flex>
+          )}
+        </Flex>
       )}
+
       {step === "question" && questions.length > 0 && (
-        <div style={{ marginTop: "2rem" }}>
-          <h2>
+        <Flex direction="column" gap="2rem" padding="2rem">
+          <Text fontSize="1.5rem" fontWeight="bold">
             Question {currentIdx + 1} of {questions.length}
-          </h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
-            {questions[currentIdx]}
-          </p>
-          <button style={{ marginTop: 24 }} onClick={handleStartRecording}>
+          </Text>
+          <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
+          <Button onClick={handleStartRecording} variation="primary">
             Record Answer
-          </button>
-        </div>
+          </Button>
+        </Flex>
       )}
+
       {step === "record" && (
-        <div style={{ marginTop: "2rem" }}>
-          <h2>
+        <Flex direction="column" gap="2rem" padding="2rem">
+          <Text fontSize="1.5rem" fontWeight="bold">
             Question {currentIdx + 1} of {questions.length}
-          </h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
-            {questions[currentIdx]}
-          </p>
+          </Text>
+          <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
           <AudioRecorder
             onTranscriptionComplete={handleTranscriptionComplete}
             onGetRating={handleGetFeedback}
           />
-        </div>
+        </Flex>
       )}
+
       {step === "feedback" && (
-        <div style={{ marginTop: "2rem" }}>
-          <h2>
+        <Flex direction="column" gap="2rem" padding="2rem">
+          <Text fontSize="1.5rem" fontWeight="bold">
             Question {currentIdx + 1} of {questions.length}
-          </h2>
-          <p style={{ fontSize: "1.2rem", fontWeight: 500 }}>
-            {questions[currentIdx]}
-          </p>
+          </Text>
+          <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
           <Analysis text={transcription} onContinue={handleNextQuestion} />
-        </div>
+        </Flex>
       )}
+
       {step === "done" && (
-        <div style={{ marginTop: "2rem" }}>
-          <h2>Practice Complete!</h2>
-          <p>You have answered all questions. Great job!</p>
-          <button onClick={handleStartOver}>Start Over</button>
-        </div>
+        <Flex direction="column" gap="2rem" padding="2rem" alignItems="center">
+          <Text fontSize="2rem" fontWeight="bold">
+            Practice Complete!
+          </Text>
+          <Text>You have answered all questions. Great job!</Text>
+          <Button onClick={handleStartOver} variation="primary">
+            Start Over
+          </Button>
+        </Flex>
       )}
     </main>
   );
