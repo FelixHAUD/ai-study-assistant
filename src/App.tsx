@@ -35,7 +35,8 @@ function App() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploadComplete, setIsUploadComplete] = useState<boolean>(false);
 
-  const canSupportSpeech = window.SpeechRecognition;
+  const canSupportSpeech =
+    "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
 
   const handleFileUpload = (file: { key: string }) => {
     setUploadedFiles((prev) => [
