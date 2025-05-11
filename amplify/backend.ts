@@ -3,7 +3,6 @@ import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { storage } from "./storage/resource";
 import { rateResponse } from "./functions/rate-response/resource";
-import { anyFiles } from "./functions/any-files/resource";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { defineFunction } from "@aws-amplify/backend";
 
@@ -12,14 +11,13 @@ const backend = defineBackend({
   data,
   storage,
   rateResponse,
-  anyFiles,
 });
 
 // Create a custom resource group for S3 permissions
 const s3Permissions = defineFunction({
   name: "s3-permissions",
   entry: "./s3-permissions.ts",
-  resourceGroupName: "storage"
+  resourceGroupName: "storage",
 });
 
 // Configure policy for S3 access
@@ -40,14 +38,14 @@ backend.auth.resources.unauthenticatedUserIamRole.addToPrincipalPolicy(
       "rekognition:DetectModerationLabels",
       "rekognition:DetectText",
       "rekognition:DetectLabel",
-      "rekognition:SearchFacesByImage",      
+      "rekognition:SearchFacesByImage",
       "textract:AnalyzeDocument",
       "textract:DetectDocumentText",
       "textract:GetDocumentAnalysis",
       "textract:StartDocumentAnalysis",
-      "textract:StartDocumentTextDetection"
+      "textract:StartDocumentTextDetection",
     ],
-    resources: ["*"]
+    resources: ["*"],
   })
 );
 

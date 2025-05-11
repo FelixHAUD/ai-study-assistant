@@ -1,14 +1,10 @@
 import "@aws-amplify/ui-react/styles.css";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FileUploader } from "@aws-amplify/ui-react-storage";
 import Analysis from "./components/Analysis/Analysis";
 import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
 import { Button, Flex, Text } from "@aws-amplify/ui-react";
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "../amplify/data/resource";
-
-const client = generateClient<Schema>();
 
 // Steps in the flow
 // 1. upload, 2. question, 3. record, 4. feedback, 5. done
@@ -36,29 +32,10 @@ function App() {
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [transcription, setTranscription] = useState<string>("");
-  const [hasAnyFiles, setHasAnyFiles] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploadComplete, setIsUploadComplete] = useState<boolean>(false);
 
   const canSupportSpeech = window.SpeechRecognition;
-
-  // Check for existing files on component mount
-  useEffect(() => {
-    async function checkForFiles() {
-      try {
-        const response = await client.queries.anyFiles();
-        setHasAnyFiles(response.data ?? false);
-      } catch (error) {
-        console.error("Error checking for files:", error);
-        setHasAnyFiles(false);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    checkForFiles();
-  }, []);
 
   const handleFileUpload = (file: { key: string }) => {
     setUploadedFiles((prev) => [
@@ -122,14 +99,6 @@ function App() {
     setUploadedFiles([]);
     setIsUploadComplete(false);
   };
-
-  if (isLoading) {
-    return (
-      <Flex justifyContent="center" alignItems="center" height="100vh">
-        <Text>Loading...</Text>
-      </Flex>
-    );
-  }
 
   if (!canSupportSpeech) {
     return (
@@ -214,16 +183,6 @@ function App() {
                 marginTop="1rem"
               >
                 Generate Questions
-              </Button>
-            )}
-
-            {hasAnyFiles && !isUploadComplete && (
-              <Button
-                onClick={handleGenerateQuestions}
-                variation="primary"
-                width="100%"
-              >
-                Use Past Uploaded Notes
               </Button>
             )}
           </Flex>
