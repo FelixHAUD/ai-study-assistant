@@ -5,9 +5,8 @@ import { FileUploader } from "@aws-amplify/ui-react-storage";
 import Analysis from "./components/Analysis/Analysis";
 import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
 import { Button, Flex, Text } from "@aws-amplify/ui-react";
-
-import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import type { Schema } from "../amplify/data/resource";
 
 const client = generateClient<Schema>();
 
@@ -15,6 +14,13 @@ const client = generateClient<Schema>();
 // 1. upload, 2. question, 3. record, 4. feedback, 5. done
 
 type Step = "upload" | "question" | "record" | "feedback" | "done";
+
+interface UploadedFile {
+  key: string;
+  name: string;
+  size: number;
+  lastModified: Date;
+}
 
 async function generateQuestions() {
   return [
@@ -32,6 +38,8 @@ function App() {
   const [transcription, setTranscription] = useState<string>("");
   const [hasAnyFiles, setHasAnyFiles] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isUploadComplete, setIsUploadComplete] = useState<boolean>(false);
 
   // Check for existing files on component mount
   useEffect(() => {
@@ -49,6 +57,16 @@ function App() {
 
     checkForFiles();
   }, []);
+
+  const handleFileUpload = (file: { key: string }) => {
+    setUploadedFiles(prev => [...prev, {
+      key: file.key,
+      name: file.key.split('/').pop() || 'Unknown file',
+      size: 0, // We don't have access to the actual file size
+      lastModified: new Date()
+    }]);
+    setIsUploadComplete(true);
+  };
 
   // Simulate question generation after file upload
   const handleGenerateQuestions = async () => {
@@ -96,96 +114,161 @@ function App() {
     setCurrentIdx(0);
     setAnswers([]);
     setTranscription("");
+    setUploadedFiles([]);
+    setIsUploadComplete(false);
   };
 
   if (isLoading) {
     return (
-      <Flex justifyContent="center" alignItems="center" height="100vh">
+      <Flex 
+        justifyContent="center" 
+        alignItems="center" 
+        height="100vh"
+      >
         <Text>Loading...</Text>
       </Flex>
     );
   }
 
   return (
-    <main>
-      {step === "upload" && (
-        <Flex direction="column" gap="2rem" padding="2rem">
-          <Text fontSize="2rem" fontWeight="bold">
-            Welcome to ConceptBridge, your AI-powered study assistant
-          </Text>
-          <Text fontSize="1.2rem">
-            Upload your notes and let ConceptBridge help you understand them.
-          </Text>
-          <FileUploader
-            acceptedFileTypes={[
-              "application/pdf",
-              "text/plain",
-              "application/msword",
-              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            ]}
-            path="notes/"
-            maxFileCount={1}
-            isResumable
-            onUploadSuccess={handleGenerateQuestions}
-          />
-          {hasAnyFiles && (
-            <Flex direction="column" gap="1rem" alignItems="center">
-              <Text>Or use a previously uploaded file:</Text>
-              <Button onClick={handleGenerateQuestions}>
+    <Flex 
+      direction="column" 
+      height="100vh" 
+      backgroundColor="white"
+    >
+      <Flex 
+        direction="column" 
+        flex="1" 
+        overflow="auto" 
+        padding="2rem"
+        gap="1.5rem"
+      >
+        {step === "upload" && (
+          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+            <Text fontSize="2rem" fontWeight="bold">
+              Welcome to ConceptBridge
+            </Text>
+            <Text fontSize="1.2rem">
+              Upload your study materials to get started
+            </Text>
+            
+            <FileUploader
+              acceptedFileTypes={[
+                "application/pdf",
+                "text/plain",
+                "application/msword",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+              ]}
+              path="notes/"
+              maxFileCount={5}
+              isResumable
+              onUploadSuccess={(file) => handleFileUpload(file)}
+            />
+
+            {uploadedFiles.length > 0 && (
+              <Flex direction="column" gap="1rem">
+                <Text fontSize="1.2rem" fontWeight="bold">
+                  Uploaded Files:
+                </Text>
+                {uploadedFiles.map((file, index) => (
+                  <Flex 
+                    key={index}
+                    padding="1rem"
+                    backgroundColor="#f8f9fa"
+                    borderRadius="8px"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    border="1px solid #e9ecef"
+                  >
+                    <Text>{file.name}</Text>
+                    <Text color="#6c757d" fontSize="0.9rem">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </Text>
+                  </Flex>
+                ))}
+              </Flex>
+            )}
+
+            {isUploadComplete && (
+              <Button
+                onClick={handleGenerateQuestions}
+                variation="primary"
+                width="100%"
+                marginTop="1rem"
+              >
+                Generate Questions
+              </Button>
+            )}
+
+            {hasAnyFiles && !isUploadComplete && (
+              <Button 
+                onClick={handleGenerateQuestions}
+                variation="primary"
+                width="100%"
+              >
                 Use Past Uploaded Notes
               </Button>
-            </Flex>
-          )}
-        </Flex>
-      )}
+            )}
+          </Flex>
+        )}
 
-      {step === "question" && questions.length > 0 && (
-        <Flex direction="column" gap="2rem" padding="2rem">
-          <Text fontSize="1.5rem" fontWeight="bold">
-            Question {currentIdx + 1} of {questions.length}
-          </Text>
-          <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
-          <Button onClick={handleStartRecording} variation="primary">
-            Record Answer
-          </Button>
-        </Flex>
-      )}
+        {step === "question" && questions.length > 0 && (
+          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+            <Text fontSize="1.5rem" fontWeight="bold">
+              Question {currentIdx + 1} of {questions.length}
+            </Text>
+            <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
+            <Button 
+              onClick={handleStartRecording}
+              variation="primary"
+              width="100%"
+            >
+              Record Answer
+            </Button>
+          </Flex>
+        )}
 
-      {step === "record" && (
-        <Flex direction="column" gap="2rem" padding="2rem">
-          <Text fontSize="1.5rem" fontWeight="bold">
-            Question {currentIdx + 1} of {questions.length}
-          </Text>
-          <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
-          <AudioRecorder
-            onTranscriptionComplete={handleTranscriptionComplete}
-            onGetRating={handleGetFeedback}
-          />
-        </Flex>
-      )}
+        {step === "record" && (
+          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+            <Text fontSize="1.5rem" fontWeight="bold">
+              Question {currentIdx + 1} of {questions.length}
+            </Text>
+            <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
+            <AudioRecorder
+              onTranscriptionComplete={handleTranscriptionComplete}
+              onGetRating={handleGetFeedback}
+            />
+          </Flex>
+        )}
 
-      {step === "feedback" && (
-        <Flex direction="column" gap="2rem" padding="2rem">
-          <Text fontSize="1.5rem" fontWeight="bold">
-            Question {currentIdx + 1} of {questions.length}
-          </Text>
-          <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
-          <Analysis text={transcription} onContinue={handleNextQuestion} />
-        </Flex>
-      )}
+        {step === "feedback" && (
+          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+            <Text fontSize="1.5rem" fontWeight="bold">
+              Question {currentIdx + 1} of {questions.length}
+            </Text>
+            <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
+            <Analysis text={transcription} onContinue={handleNextQuestion} />
+          </Flex>
+        )}
 
-      {step === "done" && (
-        <Flex direction="column" gap="2rem" padding="2rem" alignItems="center">
-          <Text fontSize="2rem" fontWeight="bold">
-            Practice Complete!
-          </Text>
-          <Text>You have answered all questions. Great job!</Text>
-          <Button onClick={handleStartOver} variation="primary">
-            Start Over
-          </Button>
-        </Flex>
-      )}
-    </main>
+        {step === "done" && (
+          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto" alignItems="center">
+            <Text fontSize="2rem" fontWeight="bold">
+              Practice Complete!
+            </Text>
+            <Text>You have answered all questions. Great job!</Text>
+            <Button 
+              onClick={handleStartOver}
+              variation="primary"
+              width="100%"
+              maxWidth="400px"
+            >
+              Start Over
+            </Button>
+          </Flex>
+        )}
+      </Flex>
+    </Flex>
   );
 }
 
