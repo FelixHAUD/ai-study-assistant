@@ -1,4 +1,4 @@
-import { Message, Rating } from "@aws-amplify/ui-react";
+import { Button, Message, Placeholder, Rating } from "@aws-amplify/ui-react";
 import "./Analysis.css";
 import { useEffect, useState } from "react";
 
@@ -28,23 +28,43 @@ async function rateText(text: string): Promise<Rating> {
 
 type AnalysisProps = {
   text: string;
+  onContinue: () => void;
 };
 
-function Analysis({ text }: AnalysisProps) {
-  const [rating, setRating] = useState<Rating>({
-    score: 0,
-    message: "",
-    improvements: [],
-  });
+function Analysis({ text, onContinue }: AnalysisProps) {
+  const [rating, setRating] = useState<Rating | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       const responseRating = await rateText(text);
       setRating(responseRating);
+      setLoading(false);
     }
 
     fetchData();
   }, [text]);
+
+  if (loading || !rating) {
+    return (
+      <div>
+        <h2>Overall Rating</h2>
+        <Placeholder />
+        <h2>Feedback Summary</h2>
+        <Placeholder />
+        <h2>Feedback Summary</h2>
+        <h2>Areas for Improvement</h2>
+        <div className="improvements-container">
+          {Array(3).map((text, idx) => (
+            <Message key={idx} variation="plain" colorTheme="info">
+              {text}
+            </Message>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -67,6 +87,7 @@ function Analysis({ text }: AnalysisProps) {
           </Message>
         ))}
       </div>
+      <Button onClick={onContinue}>Continue</Button>
     </div>
   );
 }
