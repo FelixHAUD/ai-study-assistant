@@ -41,6 +41,8 @@ function App() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploadComplete, setIsUploadComplete] = useState<boolean>(false);
 
+  const canSupportSpeech = window.SpeechRecognition;
+
   // Check for existing files on component mount
   useEffect(() => {
     async function checkForFiles() {
@@ -59,12 +61,15 @@ function App() {
   }, []);
 
   const handleFileUpload = (file: { key: string }) => {
-    setUploadedFiles(prev => [...prev, {
-      key: file.key,
-      name: file.key.split('/').pop() || 'Unknown file',
-      size: 0, // We don't have access to the actual file size
-      lastModified: new Date()
-    }]);
+    setUploadedFiles((prev) => [
+      ...prev,
+      {
+        key: file.key,
+        name: file.key.split("/").pop() || "Unknown file",
+        size: 0, // We don't have access to the actual file size
+        lastModified: new Date(),
+      },
+    ]);
     setIsUploadComplete(true);
   };
 
@@ -120,38 +125,44 @@ function App() {
 
   if (isLoading) {
     return (
-      <Flex 
-        justifyContent="center" 
-        alignItems="center" 
-        height="100vh"
-      >
+      <Flex justifyContent="center" alignItems="center" height="100vh">
         <Text>Loading...</Text>
       </Flex>
     );
   }
 
+  if (!canSupportSpeech) {
+    return (
+      <Flex justifyContent="center" alignItems="center" height="100vh">
+        <Text>Your browser doesn't support speech to text. </Text>
+      </Flex>
+    );
+  }
+
   return (
-    <Flex 
-      direction="column" 
-      height="100vh" 
-      backgroundColor="white"
-    >
-      <Flex 
-        direction="column" 
-        flex="1" 
-        overflow="auto" 
+    <Flex direction="column" height="100vh" backgroundColor="white">
+      <Flex
+        direction="column"
+        flex="1"
+        overflow="auto"
         padding="2rem"
         gap="1.5rem"
       >
         {step === "upload" && (
-          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+          <Flex
+            direction="column"
+            gap="2rem"
+            width="100%"
+            maxWidth="800px"
+            margin="0 auto"
+          >
             <Text fontSize="2rem" fontWeight="bold">
               Welcome to ConceptBridge
             </Text>
             <Text fontSize="1.2rem">
               Upload your study materials to get started
             </Text>
-            
+
             <FileUploader
               acceptedFileTypes={[
                 "application/pdf",
@@ -177,7 +188,7 @@ function App() {
                   Uploaded Files:
                 </Text>
                 {uploadedFiles.map((file, index) => (
-                  <Flex 
+                  <Flex
                     key={index}
                     padding="1rem"
                     backgroundColor="#f8f9fa"
@@ -207,7 +218,7 @@ function App() {
             )}
 
             {hasAnyFiles && !isUploadComplete && (
-              <Button 
+              <Button
                 onClick={handleGenerateQuestions}
                 variation="primary"
                 width="100%"
@@ -219,12 +230,18 @@ function App() {
         )}
 
         {step === "question" && questions.length > 0 && (
-          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+          <Flex
+            direction="column"
+            gap="2rem"
+            width="100%"
+            maxWidth="800px"
+            margin="0 auto"
+          >
             <Text fontSize="1.5rem" fontWeight="bold">
               Question {currentIdx + 1} of {questions.length}
             </Text>
             <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
-            <Button 
+            <Button
               onClick={handleStartRecording}
               variation="primary"
               width="100%"
@@ -235,7 +252,13 @@ function App() {
         )}
 
         {step === "record" && (
-          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+          <Flex
+            direction="column"
+            gap="2rem"
+            width="100%"
+            maxWidth="800px"
+            margin="0 auto"
+          >
             <Text fontSize="1.5rem" fontWeight="bold">
               Question {currentIdx + 1} of {questions.length}
             </Text>
@@ -248,7 +271,13 @@ function App() {
         )}
 
         {step === "feedback" && (
-          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto">
+          <Flex
+            direction="column"
+            gap="2rem"
+            width="100%"
+            maxWidth="800px"
+            margin="0 auto"
+          >
             <Text fontSize="1.5rem" fontWeight="bold">
               Question {currentIdx + 1} of {questions.length}
             </Text>
@@ -258,12 +287,19 @@ function App() {
         )}
 
         {step === "done" && (
-          <Flex direction="column" gap="2rem" width="100%" maxWidth="800px" margin="0 auto" alignItems="center">
+          <Flex
+            direction="column"
+            gap="2rem"
+            width="100%"
+            maxWidth="800px"
+            margin="0 auto"
+            alignItems="center"
+          >
             <Text fontSize="2rem" fontWeight="bold">
               Practice Complete!
             </Text>
             <Text>You have answered all questions. Great job!</Text>
-            <Button 
+            <Button
               onClick={handleStartOver}
               variation="primary"
               width="100%"
