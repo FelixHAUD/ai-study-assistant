@@ -23,7 +23,6 @@ An intelligent study assistant that helps users learn through interactive Q&A an
 - **Backend**:
   - AWS Amplify
   - AWS Bedrock (Supposed to be Claude, may be AWS Kendra)
-  - Amazon Cognito (Authentication)
   - Amazon S3 (File Storage)
   - AWS Lambda (Serverless Functions)
 
@@ -98,7 +97,7 @@ An intelligent study assistant that helps users learn through interactive Q&A an
   - Implemented React components and user interface
   - Integrated AWS Amplify UI components
   - Created speech-to-text interface
-  - Configured AWS Cognito authentication
+  - Set up IAM roles and policies for access control
 
 ### Johnny Wu
 - **Role**: FUllstack
@@ -119,7 +118,6 @@ An intelligent study assistant that helps users learn through interactive Q&A an
 ## Security
 
 - All user data is encrypted in transit and at rest
-- Authentication handled through Amazon Cognito
 - Secure file storage with S3
 - IAM roles and policies for access control
 
