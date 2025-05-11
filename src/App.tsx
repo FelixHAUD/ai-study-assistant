@@ -16,14 +16,16 @@ interface UploadedFile {
   name: string;
   size: number;
   lastModified: Date;
+  objURL: string;
 }
 
-async function generateQuestions() {
-  return [
-    "What is the main idea of the uploaded document?",
-    "Summarize the key findings in your own words.",
-    "How could you apply this information in a real-world scenario?",
-  ];
+function buildS3URL(path: string) {
+  const bucketUrl =
+    "https://amplify-amplifyvitereactt-amplifyteamdrivebucket28-2j1zgywqwfjv.s3.us-west-2.amazonaws.com";
+  const encodedPath = encodeURIComponent(path)
+    .replace(/%20/g, "+") // space → +
+    .replace(/%2F/g, "/"); // %2F → /
+  return `${bucketUrl}/${encodedPath}`;
 }
 
 function App() {
@@ -34,6 +36,66 @@ function App() {
   const [transcription, setTranscription] = useState<string>("");
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploadComplete, setIsUploadComplete] = useState<boolean>(false);
+
+  const handleGenerateQuestions = async () => {
+    try {
+      // Get the content of the first uploaded file
+      const file = uploadedFiles[0];
+      if (!file) {
+        throw new Error("No files uploaded");
+      }
+
+      // Convert file content to base64
+      const objURL = buildS3URL(file.key);
+      console.log(objURL);
+      const fileContent = await fetch(objURL).then((res) => res.text());
+      const base64Content = btoa(fileContent);
+
+      // Get filename from the key
+      const filename = file.key.split("/").pop() || "Unknown file";
+
+      // Call the file query endpoint
+      const response = await fetch(
+        "https://qkhr2j5d52.execute-api.us-west-2.amazonaws.com/filequery",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt:
+              "Generate 3 study questions based on this content. Make them thought-provoking and focused on understanding key concepts.",
+            filename: filename,
+            file_content_base64: base64Content,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate questions");
+      }
+
+      const data = await response.json();
+      // Assuming the response contains an array of questions
+      setQuestions(
+        data.questions || [
+          "What is the main idea of the uploaded document?",
+          "Summarize the key findings in your own words.",
+          "How could you apply this information in a real-world scenario?",
+        ]
+      );
+      setStep("question");
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      // Fallback to default questions if the API call fails
+      setQuestions([
+        "What is the main idea of the uploaded document?",
+        "Summarize the key findings in your own words.",
+        "How could you apply this information in a real-world scenario?",
+      ]);
+      setStep("question");
+    }
+  };
 
   const canSupportSpeech =
     "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
@@ -46,16 +108,10 @@ function App() {
         name: file.key.split("/").pop() || "Unknown file",
         size: 0, // We don't have access to the actual file size
         lastModified: new Date(),
+        objURL: buildS3URL(file.key),
       },
     ]);
     setIsUploadComplete(true);
-  };
-
-  // Simulate question generation after file upload
-  const handleGenerateQuestions = async () => {
-    const questions = await generateQuestions();
-    setQuestions(questions);
-    setStep("question");
   };
 
   // When user clicks "Record Answer"
