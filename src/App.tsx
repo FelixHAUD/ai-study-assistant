@@ -1,6 +1,6 @@
 import "@aws-amplify/ui-react/styles.css";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FileUploader } from "@aws-amplify/ui-react-storage";
 import Analysis from "./components/Analysis/Analysis";
 import AudioRecorder from "./components/AudioRecorder/AudioRecorder";
@@ -24,7 +24,7 @@ function App() {
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [transcription, setTranscription] = useState<string>("");
-  // const [fileUploaded, setFileUploaded] = useState<boolean>(false);
+  const [hasAnyFiles, setHasAnyFiles] = useState<boolean>(false);
 
   // Simulate question generation after file upload
   const handleGenerateQuestions = async () => {
@@ -32,6 +32,11 @@ function App() {
     const questions = await generateQuestions();
     setQuestions(questions);
     setStep("question");
+  };
+
+  const checkHasAnyFile = async () => {
+    // checks if ther are any files in the S3 bucket
+    setHasAnyFiles(true);
   };
 
   // When user clicks "Record Answer"
@@ -76,6 +81,14 @@ function App() {
     // setFileUploaded(false);
   };
 
+  useEffect(() => {
+    async function startUp() {
+      checkHasAnyFile();
+    }
+
+    startUp();
+  }, []);
+
   return (
     <main>
       {step === "upload" && (
@@ -93,9 +106,11 @@ function App() {
             onUploadSuccess={handleGenerateQuestions}
           />
           <div style={{ marginTop: "2rem", textAlign: "center" }}>
-            <button onClick={handleGenerateQuestions}>
-              Use Past Uploaded Notes
-            </button>
+            {hasAnyFiles && (
+              <button onClick={handleGenerateQuestions}>
+                Use Past Uploaded Notes
+              </button>
+            )}
           </div>
         </div>
       )}
