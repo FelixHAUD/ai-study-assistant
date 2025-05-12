@@ -45,8 +45,8 @@ async function getQuestions(localPaths: string[]) {
   const s3Client = new S3Client({
     region: "us-west-2",
     credentials: {
-      accessKeyId: import.meta.env.VITE_accessKeyID,
-      secretAccessKey: import.meta.env.VITE_secretAccessKey,
+      accessKeyId: "AKIA6ODU2DW6TI6JDBKN",
+      secretAccessKey: "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",
     },
   });
   for (const path of localPaths) {
