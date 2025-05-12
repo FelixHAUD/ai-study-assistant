@@ -12,8 +12,8 @@ export const handler: Schema["getQuestions"]["functionHandler"] = async (
   const s3Client = new S3Client({
     region: "us-west-2",
     credentials: {
-      accessKeyId: "AKIA6ODU2DW6QT77OC4S",
-      secretAccessKey: "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",
+      accessKeyId: "",
+      secretAccessKey: "",
     },
   });
 
