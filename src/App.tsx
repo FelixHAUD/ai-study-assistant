@@ -237,10 +237,7 @@ function App() {
 
             <FileUploader
               acceptedFileTypes={[
-                "application/pdf",
                 "text/plain",
-                "application/msword",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 "text/markdown",
                 "text/x-markdown",
               ]}
