@@ -10,8 +10,6 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 // Steps in the flow
 // 1. upload, 2. question, 3. record, 4. feedback, 5. done
 
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 function fileToBase64(file: Blob): Promise<string> {
@@ -33,8 +31,6 @@ function fileToBase64(file: Blob): Promise<string> {
   });
 }
 
-const client = generateClient<Schema>();
-
 type Step = "upload" | "question" | "record" | "feedback" | "done";
 
 interface UploadedFile {
@@ -49,8 +45,8 @@ async function getQuestions(localPaths: string[]) {
   const s3Client = new S3Client({
     region: "us-west-2",
     credentials: {
-      accessKeyId: "AKIA6ODU2DW6QT77OC4S",
-      secretAccessKey: "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",
+      accessKeyId: import.meta.env.VITE_accessKeyID,
+      secretAccessKey: import.meta.env.VITE_secretAccessKey,
     },
   });
   for (const path of localPaths) {
@@ -86,7 +82,7 @@ async function getQuestions(localPaths: string[]) {
         },
         body: JSON.stringify({
           prompt:
-            "Generate study questions based on this content. Make them thought-provoking and focused on understanding key concepts.",
+            "Based on the provided content, generate a list of 5 thought-provoking study questions that focus on understanding key concepts. Format your response strictly as a JSON array of strings, without any additional text or formatting. Ensure the JSON is valid and does not include newline characters.",
           filename: "something.txt",
           file_content_base64: content.join(),
         }),
@@ -98,9 +94,8 @@ async function getQuestions(localPaths: string[]) {
     }
 
     const data = await response.json();
-    console.log(data);
 
-    return data;
+    return JSON.parse(data.output);
   } catch (error) {
     console.error("Error generating questions:", error);
     throw error;
@@ -127,8 +122,6 @@ function App() {
       const questions = await getQuestions(
         uploadedFiles.map((file) => file.key)
       );
-
-      console.log(questions);
 
       // Assuming the response contains an array of questions
       setQuestions(
@@ -248,6 +241,8 @@ function App() {
                 "text/plain",
                 "application/msword",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "text/markdown",
+                "text/x-markdown",
               ]}
               path="notes/"
               maxFileCount={5}
@@ -351,7 +346,11 @@ function App() {
               Question {currentIdx + 1} of {questions.length}
             </Text>
             <Text fontSize="1.2rem">{questions[currentIdx]}</Text>
-            <Analysis text={transcription} onContinue={handleNextQuestion} />
+            <Analysis
+              text={transcription}
+              question={questions[currentIdx]}
+              onContinue={handleNextQuestion}
+            />
           </Flex>
         )}
 
