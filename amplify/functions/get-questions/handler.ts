@@ -12,8 +12,8 @@ export const handler: Schema["getQuestions"]["functionHandler"] = async (
   const s3Client = new S3Client({
     region: "us-west-2",
     credentials: {
-      accessKeyId: "AKIA6ODU2DW6QT77OC4S",
-      secretAccessKey: "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",
+      accessKeyId: "xxxx",
+      secretAccessKey: "xxxx", // put into env file for local, and permission for AWS
     },
   });
 
@@ -22,7 +22,7 @@ export const handler: Schema["getQuestions"]["functionHandler"] = async (
       // Generate presigned URL
       const command = new GetObjectCommand({
         Bucket:
-          "amplify-amplifyvitereactt-amplifyteamdrivebucket28-2j1zgywqwfjv",
+          "xxxx",
         Key: path,
       });
 
@@ -42,7 +42,7 @@ export const handler: Schema["getQuestions"]["functionHandler"] = async (
 
   try {
     const response = await fetch(
-      "https://qkhr2j5d52.execute-api.us-west-2.amazonaws.com/filequery",
+      "xxxx",
       {
         method: "POST",
         headers: {
